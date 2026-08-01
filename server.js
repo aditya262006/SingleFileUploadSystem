@@ -1,0 +1,73 @@
+require("dotenv").config();
+
+const express  = require("express");
+const mongoose = require("mongoose");
+const cors     = require("cors");
+const path     = require("path");
+const fs       = require("fs");
+
+const uploadRoutes = require("./routes/upload");
+
+const app  = express();
+const PORT = process.env.PORT || 5000;
+
+const uploadsDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log("📁  Created uploads/ directory");
+}
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.use(express.static(path.join(__dirname, "public")));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+app.use("/api", uploadRoutes);
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+app.use((err, req, res, next) => {
+  console.error("Global error:", err.message);
+
+  if (err.code === "LIMIT_FILE_SIZE") {
+    return res.status(413).json({ success: false, message: "File too large. Max 25 MB allowed." });
+  }
+  if (err.message && err.message.includes("Invalid file type")) {
+    return res.status(400).json({ success: false, message: err.message });
+  }
+  return res.status(500).json({ success: false, message: err.message });
+});
+
+// ── MongoDB Connection 
+const startServer = async () => {
+  try {
+    let mongoUri = process.env.MONGO_URI;
+    
+    try {
+      await mongoose.connect(mongoUri);
+      console.log("✅  MongoDB connected to remote cluster");
+    } catch (err) {
+      console.warn("⚠️  Remote MongoDB connection failed:", err.message);
+      console.log("⏳  Attempting to start local in-memory MongoDB fallback...");
+      
+      const { MongoMemoryServer } = require("mongodb-memory-server");
+      const mongoServer = await MongoMemoryServer.create();
+      mongoUri = mongoServer.getUri();
+      
+      await mongoose.connect(mongoUri);
+      console.log("✅  MongoDB connected to local in-memory database");
+    }
+
+    app.listen(PORT, () => {
+      console.log(`🚀  Server running at http://localhost:${PORT}`);
+    });
+  } catch (err) {
+    console.error("❌  MongoDB connection failed completely:", err.message);
+    process.exit(1);
+  }
+};
+
+startServer();

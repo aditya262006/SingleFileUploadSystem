@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FileVault — Cloud File Storage</title>
+  <meta name="description" content="FileVault — Premium cloud file storage with drag-and-drop uploads, search, and instant downloads."/>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+
+<canvas id="bgCanvas"></canvas>
+<div class="bg-gradient"></div>
+<div id="toastContainer" class="toast-container"></div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3>🗑️ Delete File?</h3>
+    <p>Are you sure you want to delete <strong id="modalFileName"></strong>? This action cannot be undone.</p>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" id="modalCancel">Cancel</button>
+      <button class="modal-btn danger" id="modalConfirm">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="app-wrapper">
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-badge"><span class="dot"></span> FileVault v2.0</div>
+    <h1>FileVault</h1>
+    <p class="subtitle">Drag, drop, and manage your files with ease</p>
+  </header>
+
+  <!-- Stats Dashboard -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon">📊</div>
+      <div class="stat-value" id="statFiles">0</div>
+      <div class="stat-label">Total Files</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">💾</div>
+      <div class="stat-value" id="statSize">0 B</div>
+      <div class="stat-label">Storage Used</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">📁</div>
+      <div class="stat-value" id="statType">—</div>
+      <div class="stat-label">Top Category</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🏷️</div>
+      <div class="stat-value" id="statTypes">0</div>
+      <div class="stat-label">File Types</div>
+    </div>
+  </div>
+
+  <!-- Upload Card -->
+  <div class="glass-card">
+    <div class="card-header">
+      <div class="card-title">
+        <div class="icon cyan">⬆</div>
+        Upload File
+      </div>
+    </div>
+
+    <div class="drop-zone" id="dropZone">
+      <input type="file" id="fileInput"/>
+      <div class="drop-icon">☁️</div>
+      <p class="drop-text">Drag & drop your file here, or <span>browse</span></p>
+      <p class="drop-hint">Max 25 MB · Images, Documents, Archives, Audio, Video</p>
+    </div>
+
+    <!-- Selected file preview -->
+    <div class="file-preview" id="filePreview">
+      <div class="file-preview-thumb" id="previewThumb"></div>
+      <div class="file-preview-info">
+        <div class="file-preview-name" id="previewName"></div>
+        <div class="file-preview-meta" id="previewMeta"></div>
+      </div>
+      <button class="file-preview-remove" id="previewRemove" title="Remove">✕</button>
+    </div>
+    <div class="upload-progress" id="progressWrap">
+      <div class="progress-ring-wrap">
+        <svg class="progress-ring" width="80" height="80">
+          <defs>
+            <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#00d4ff"/>
+              <stop offset="100%" stop-color="#8b5cf6"/>
+            </linearGradient>
+          </defs>
+          <circle class="progress-ring-bg" cx="40" cy="40" r="36" fill="none" stroke-width="5"/>
+          <circle class="progress-ring-fill" id="progressFill" cx="40" cy="40" r="36" fill="none" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+        <div class="progress-pct" id="progressPct">0%</div>
+      </div>
+      <div class="progress-status" id="progressStatus">Uploading…</div>
+    </div>
+
+    <button class="btn-upload" id="uploadBtn" disabled><span>Upload File</span></button>
+  </div>
+
+  <!-- File Gallery -->
+  <div class="glass-card">
+    <div class="card-header">
+      <div class="card-title">
+        <div class="icon violet">📂</div>
+        Your Files
+      </div>
+      <div class="toolbar">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="searchInput" placeholder="Search files…"/>
+        </div>
+        <select class="toolbar-btn" id="sortSelect">
+          <option value="">Sort: Newest</option>
+          <option value="date-asc">Oldest First</option>
+          <option value="name-asc">Name A-Z</option>
+          <option value="name-desc">Name Z-A</option>
+          <option value="size-desc">Largest</option>
+          <option value="size-asc">Smallest</option>
+        </select>
+        <div class="view-toggle">
+          <button class="toolbar-btn view-btn active" data-view="list" title="List View">☰</button>
+          <button class="toolbar-btn view-btn" data-view="grid" title="Grid View">▦</button>
+        </div>
+      </div>
+    </div>
+    <div id="file-list">
+      <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        <p>No files yet — upload your first file above!</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
