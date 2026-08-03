@@ -37,28 +37,28 @@ app.use((err, req, res, next) => {
 // ── MongoDB Connection 
 const startServer = async () => {
   try {
-    let mongoUri = process.env.MONGO_URI;
+    let mongoUri = process.env.MONGODB_CONNECTION_STRING;
     
-    try {
-      await mongoose.connect(mongoUri);
-      console.log("✅  MongoDB connected to remote cluster");
-    } catch (err) {
-      console.warn("⚠️  Remote MongoDB connection failed:", err.message);
-      console.log("⏳  Attempting to start local in-memory MongoDB fallback...");
-      
+    if (!mongoUri) {
+      console.warn("⚠️  MONGODB_CONNECTION_STRING not set, using in-memory database");
       const { MongoMemoryServer } = require("mongodb-memory-server");
       const mongoServer = await MongoMemoryServer.create();
       mongoUri = mongoServer.getUri();
-      
+    }
+    
+    try {
       await mongoose.connect(mongoUri);
-      console.log("✅  MongoDB connected to local in-memory database");
+      console.log("✅  MongoDB connected");
+    } catch (err) {
+      console.error("❌  MongoDB connection failed:", err.message);
+      process.exit(1);
     }
 
     app.listen(PORT, () => {
       console.log(`🚀  Server running at http://localhost:${PORT}`);
     });
   } catch (err) {
-    console.error("❌  MongoDB connection failed completely:", err.message);
+    console.error("❌  Server startup failed:", err.message);
     process.exit(1);
   }
 };
