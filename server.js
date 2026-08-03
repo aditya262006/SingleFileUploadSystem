@@ -1,3 +1,5 @@
+// Load env from both .env files
+require("dotenv").config({ path: "/vercel/share/.env.project" });
 require("dotenv").config();
 
 const express  = require("express");
