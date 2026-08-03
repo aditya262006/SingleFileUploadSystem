@@ -11,7 +11,7 @@ const fileSchema = new mongoose.Schema(
       type:     String,
       required: true,       
     },
-    filePath: {
+    blobUrl: {
       type:     String,
       required: true,       
     },

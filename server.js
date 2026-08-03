@@ -4,24 +4,17 @@ const express  = require("express");
 const mongoose = require("mongoose");
 const cors     = require("cors");
 const path     = require("path");
-const fs       = require("fs");
 
 const uploadRoutes = require("./routes/upload");
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
 
-const uploadsDir = path.join(__dirname, "uploads");
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-  console.log("📁  Created uploads/ directory");
-}
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(express.static(path.join(__dirname, "public")));
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use("/api", uploadRoutes);
 

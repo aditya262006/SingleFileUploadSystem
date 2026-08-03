@@ -1,7 +1,6 @@
 const express = require("express");
 const router  = express.Router();
-const path    = require("path");
-const fs      = require("fs");
+const { put, del } = require("@vercel/blob");
 
 const upload  = require("../middleware/multerConfig");
 const File    = require("../models/File");
@@ -12,10 +11,16 @@ router.post("/upload", upload.single("file"), async (req, res) => {
       return res.status(400).json({ success: false, message: "No file uploaded." });
     }
 
+    // Upload to Vercel Blob
+    const blob = await put(req.file.originalname, req.file.buffer, {
+      access: "public",
+      contentType: req.file.mimetype,
+    });
+
     const newFile = new File({
-      fileName:     req.file.filename,
+      fileName:     blob.pathname,
       originalName: req.file.originalname,
-      filePath:     req.file.path,
+      blobUrl:      blob.url,
       fileSize:     req.file.size,
       mimeType:     req.file.mimetype,
     });
@@ -113,8 +118,8 @@ router.get("/files/:id", async (req, res) => {
       return res.status(404).json({ success: false, message: "File not found." });
     }
 
-    const absolutePath = path.resolve(file.filePath);
-    return res.download(absolutePath, file.originalName);
+    // Redirect to Blob URL
+    return res.redirect(file.blobUrl);
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
@@ -128,13 +133,8 @@ router.get("/files/:id/preview", async (req, res) => {
       return res.status(404).json({ success: false, message: "File not found." });
     }
 
-    const absolutePath = path.resolve(file.filePath);
-    if (!fs.existsSync(absolutePath)) {
-      return res.status(404).json({ success: false, message: "File not found on disk." });
-    }
-
-    res.setHeader("Content-Type", file.mimeType);
-    res.sendFile(absolutePath);
+    // Redirect to Blob URL for preview
+    return res.redirect(file.blobUrl);
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
@@ -147,9 +147,11 @@ router.delete("/files/:id", async (req, res) => {
       return res.status(404).json({ success: false, message: "File not found." });
     }
 
-    const absolutePath = path.resolve(file.filePath);
-    if (fs.existsSync(absolutePath)) {
-      fs.unlinkSync(absolutePath);
+    // Delete from Vercel Blob
+    try {
+      await del(file.blobUrl);
+    } catch (err) {
+      console.warn("Failed to delete from Blob:", err.message);
     }
 
     await File.findByIdAndDelete(req.params.id);
