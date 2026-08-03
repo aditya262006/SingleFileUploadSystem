@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: file-upload-system
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_CONNECTION_STRING
+        fromDatabase:
+          name: file-upload-db
+          property: connectionString
+      - key: BLOB_READ_WRITE_TOKEN
+        sync: false
+
+databases:
+  - name: file-upload-db
+    databaseName: file_upload
+    user: file_upload_user
